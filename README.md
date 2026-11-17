@@ -27,18 +27,9 @@ SGSU/
 │   └── js/
 │       └── app.js                # Chat controller, markdown parser & auto-reconnect
 ├── docs/                         # Guides, technical overview & deployment docs
-│   ├── 00_MASTER_INDEX.md
-│   ├── COMPLETE_GUIDE.md
-│   ├── DEPLOYMENT_READY.md
 │   ├── DEPLOY_RENDER.md
-│   ├── DOCUMENTATION_INDEX.md
-│   ├── FINAL_SUMMARY.md
-│   ├── FINAL_VERIFICATION.md
-│   ├── PROJECT_COMPLETE.md
-│   ├── PROJECT_SUMMARY.md
 │   ├── QUICK_START.md
 │   ├── SGSU_TRAINING_UPDATE.md
-│   ├── START_HERE.md
 │   └── SYSTEM_OVERVIEW.md
 ├── .env.example                  # Environment configuration template
 ├── .gitignore                    # Git ignore rules (Python, npm, OS, IDE)
@@ -178,4 +169,3 @@ Comprehensive guides and architectural documentation are available in the [`docs
 - [docs/SYSTEM_OVERVIEW.md](docs/SYSTEM_OVERVIEW.md) — Technical architecture and data flow.
 - [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) — Cloud deployment on Render.
 - [docs/SGSU_TRAINING_UPDATE.md](docs/SGSU_TRAINING_UPDATE.md) — Knowledge base categorization and training details.
-- [docs/00_MASTER_INDEX.md](docs/00_MASTER_INDEX.md) — Project verification master index.
