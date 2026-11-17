@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/data/knowledge_base.json:/app/backend/data/knowledge_base.json
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  frontend:
+    image: python:3.11-slim
+    ports:
+      - "8080:8080"
+    working_dir: /app/frontend
+    volumes:
+      - ./frontend:/app/frontend
+    command: python -m http.server 8080
+    depends_on:
+      - backend
