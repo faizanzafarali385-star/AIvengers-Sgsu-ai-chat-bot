@@ -26,5 +26,9 @@ dist/
 .DS_Store
 Thumbs.db
 
+# Node / npm
+node_modules/
+package-lock.json
+
 # Vercel & Deployment
 .vercel
