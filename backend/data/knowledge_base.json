@@ -23,7 +23,7 @@
         },
         {
           "question": "where is sgsu located",
-          "keywords": ["location", "address", "campus", "situated", "where", "bhopal"],
+          "keywords": ["location", "address", "campus", "situated", "where", "bhopal", "where is sgsu", "where located", "university location", "campus location"],
           "answer": "SGSU Campus is located at SCOPE Campus, NH-12, Near Misrod, Hoshangabad Road, Bhopal, Madhya Pradesh, India. The campus spans 26 acres. Contact: +91-7552432903/904 or +91-7552432909, Email: info@sgsuniversity.ac.in"
         },
         {
@@ -67,13 +67,13 @@
       "name": "Placements & Career",
       "qa_pairs": [
         {
-          "question": "what is the college average placement rate",
-          "keywords": ["placement rate", "placement percentage", "stats", "average", "record"],
+          "question": "what is the college average placement rate and opportunities",
+          "keywords": ["placement rate", "placement percentage", "placement opportunities", "placements", "career opportunities", "stats", "average", "record"],
           "answer": "SGSU has an excellent placement record with strong partnerships with 500+ companies. We ensure practical exposure and job readiness for all students. Most graduates secure placements through campus recruitment or internship conversions."
         },
         {
           "question": "who are the top recruiters at sgsu",
-          "keywords": ["recruiters", "companies", "corporate", "employers", "top"],
+          "keywords": ["recruiters", "companies", "corporate", "employers", "top", "recruits", "who recruits", "top recruiters", "recruiting companies", "placement partners"],
           "answer": "SGSU's top recruiters include: NIIT, TCS (Tata Consultancy Services), Infosys, Amazon, TATA, Edelweiss, JustDial, Bajaj Finserv, IndusInd Bank, Paytm, Cafe Coffee Day, and many more leading national and international companies."
         },
         {
@@ -103,7 +103,7 @@
       "qa_pairs": [
         {
           "question": "what facilities does sgsu campus have",
-          "keywords": ["facilities", "campus", "infrastructure", "amenities", "available"],
+          "keywords": ["facilities", "infrastructure", "amenities", "campus facilities", "facilities available", "campus amenities"],
           "answer": "SGSU offers state-of-the-art facilities: (1) Advanced technology labs with industry-standard equipment, (2) Fully Wi-Fi enabled campus, (3) Modern classrooms and learning spaces, (4) Indoor and outdoor sports facilities, (5) Auditorium for events, (6) Hygienic canteen, (7) Libraries with digital resources, (8) Specialized equipment."
         },
         {
@@ -123,7 +123,7 @@
         },
         {
           "question": "is sgsu campus wifi enabled",
-          "keywords": ["wifi", "internet", "connectivity", "wi-fi", "wireless"],
+          "keywords": ["wifi", "internet", "connectivity", "wi-fi", "wireless", "wifi available", "wifi facility", "internet access"],
           "answer": "Yes! SGSU campus is fully Wi-Fi enabled, providing seamless internet connectivity throughout the campus for all students and faculty members."
         },
         {
@@ -167,8 +167,13 @@
       "name": "Fees & Admission",
       "qa_pairs": [
         {
+          "question": "what are the admission requirements and eligibility criteria at sgsu",
+          "keywords": ["admission requirements", "admission eligibility", "eligibility", "requirements", "eligibility criteria", "how to get admission", "admission criteria", "documents required for admission", "what are the admission requirements"],
+          "answer": "SGSU Admission Requirements & Eligibility:\n\n• **Diploma Programs:** Passed Class 10th from any recognized board.\n• **Undergraduate Programs (B.Tech, BCA, B.Sc, BBA, B.Com, B.A):** Passed Class 12th in the relevant stream from a recognized board.\n• **Postgraduate Programs (M.Tech, MCA, MBA, M.Sc, M.Com, M.A):** Bachelor's degree (Graduation) in the respective discipline with minimum qualifying marks.\n• **Documents Needed:** Class 10 & 12 marksheets, Graduation degree (for PG), Transfer / Migration Certificate, ID Proof (Aadhaar), and passport-size photographs.\n• **Application Mode:** Direct merit-based admission & online application via https://sgsuniversity.ac.in/enquire-now/ or call +91-7552432903/904."
+        },
+        {
           "question": "what is the total fee structure at sgsu",
-          "keywords": ["fee", "cost", "tuition", "charges", "expense", "hostel", "annual fees", "complete fee structure", "fee details", "fee information"],
+          "keywords": ["fee", "cost", "tuition", "charges", "expense", "hostel", "annual fees", "complete fee structure", "fee details", "fee information", "fees details", "fee structure"],
           "answer": "SGSU's complete annual fee structure:\n**UNDERGRADUATE PROGRAMS:**\n• B.Tech (4 years): ₹40,000 - ₹80,000 | Eligibility: Class 12 pass\n• BCA (3 years): ₹25,000 - ₹35,000 | Eligibility: Class 12 pass\n• B.Sc (3 years): ₹20,000 - ₹2,00,000 | Eligibility: Class 12 pass\n• BBA (3 years): ₹25,000 - ₹50,000 | Eligibility: Class 12 pass\n• B.Com (3 years): ₹20,000 | Eligibility: Class 12 pass\n• B.A (3 years): ₹12,000 - ₹35,000 | Eligibility: Class 12 pass\n• BFA (4 years): ₹30,000 | Eligibility: Class 12 pass\n• BPES (3 years): ₹25,000 | Eligibility: Class 12 pass\n• B.Lib (1 year): ₹15,000 | Eligibility: Graduation pass\n• B.Ed (2 years): ₹35,000 | Eligibility: Graduation pass\n**POSTGRADUATE PROGRAMS:**\n• M.Tech (2 years): ₹50,000 | Eligibility: Graduation pass\n• MCA (2 years): ₹50,000 | Eligibility: Graduation pass\n• MBA (2 years): ₹50,000 | Eligibility: Graduation pass\n• M.Sc (2 years): ₹20,000 - ₹75,000 | Eligibility: Graduation pass\n• M.Com (2 years): ₹25,000 | Eligibility: Graduation pass\n• M.A (2 years): ₹16,000 - ₹35,000 | Eligibility: Graduation pass\n• MFA (2 years): ₹25,000 | Eligibility: BFA pass\n• MPES (2 years): ₹30,000 | Eligibility: BPES/BPEd pass\n• PGDCA (1 year): ₹12,000 | Eligibility: Graduation pass\n• M.Lib (1 year): ₹20,000 | Eligibility: B.Lib pass\n• PG Diploma (1 year): ₹35,000 | Eligibility: Graduation pass\n**DIPLOMA PROGRAMS:**\n• Diploma Courses (1-3 years): ₹10,000 - ₹60,000 | Eligibility: Class 10 pass\nFor exact fees and financial assistance, contact admissions at +91-7552432903/904"
         },
         {
@@ -313,12 +318,12 @@
       "qa_pairs": [
         {
           "question": "what are all the courses offered at sgsu",
-          "keywords": ["all courses", "complete list", "programs offered", "degrees"],
+          "keywords": ["all courses", "complete list", "programs offered", "degrees", "programs and courses", "courses and programs", "courses offered", "programs", "degrees offered"],
           "answer": "SGSU offers 23+ undergraduate and postgraduate courses across diverse fields:\n**Undergraduate (UG)**: B.Tech (7 specializations), B.Sc (17 specializations), B.A (14 specializations), BBA (16 specializations), BCA (5 specializations), B.Com (10 specializations), B.Ed, BFA, BPES, B.Lib\n**Postgraduate (PG)**: M.Tech (6 specializations), MCA, MBA (3 programs), M.Sc (16 specializations), M.A (5 specializations), M.Com (4 programs), MFA, MPES, M.Lib, PGDCA\n**Diploma**: 1-3 year diploma programs in various fields\n**PG Diploma**: Post-graduation diploma programs"
         },
         {
           "question": "what are the btech specializations at sgsu",
-          "keywords": ["btech", "specializations", "engineering", "cse", "mechanical", "tell me about", "btech specializations"],
+          "keywords": ["btech", "specializations", "engineering", "cse", "mechanical", "btech branches", "btech specializations"],
           "answer": "B.Tech at SGSU offers 7 specializations:\n1. B.Tech CSE in Artificial Intelligence & Machine Learning (AISECT)\n2. B.Tech CSE in Artificial Intelligence & Machine Learning\n3. B.Tech in Mechanical Engineering\n4. B.Tech in Computer Science\n5. B.Tech in Electronics and Communication\n+ 2 more specializations\nDuration: 4 years | Fees: ₹40,000 - ₹80,000 annually | Eligibility: Class 12 pass"
         },
         {

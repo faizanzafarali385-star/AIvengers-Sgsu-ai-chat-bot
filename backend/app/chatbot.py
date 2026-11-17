@@ -1,8 +1,9 @@
 """Core Chatbot logic, knowledge base matching, and OpenRouter integration."""
 import json
 import random
+import re
 import requests
-from typing import Tuple, Optional, Dict, Any
+from typing import Tuple, Optional, Dict, Any, Set
 
 from backend.app.config import (
     KNOWLEDGE_BASE_PATH,
@@ -13,6 +14,15 @@ from backend.app.config import (
 
 # Counter for rotating between OpenRouter API keys
 API_KEY_COUNTER = 0
+
+STOP_WORDS = {
+    'what', 'is', 'are', 'the', 'tell', 'me', 'about', 'how', 'do', 'i', 
+    'to', 'at', 'in', 'for', 'of', 'a', 'an', 'can', 'you', 'please', 
+    'give', 'some', 'there', 'any', 'my', 'we', 'your', 'and', 'or', 'on', 
+    'with', 'from', 'all', 'would', 'like', 'know', 'information', 'details', 'show'
+}
+
+GENERIC_WORDS = {'sgsu', 'university', 'college', 'campus', 'student', 'institute', 'institution', 'available'}
 
 
 def load_knowledge_base() -> Dict[str, Any]:
@@ -28,59 +38,165 @@ def load_knowledge_base() -> Dict[str, Any]:
 knowledge_base = load_knowledge_base()
 
 
+def normalize_text(text: str) -> str:
+    """Normalize text by lowercasing, handling common acronyms, and stripping punctuation."""
+    text = text.lower().strip()
+    text = re.sub(r'b\.?tech', 'btech', text)
+    text = re.sub(r'm\.?tech', 'mtech', text)
+    text = re.sub(r'b\.?sc', 'bsc', text)
+    text = re.sub(r'm\.?sc', 'msc', text)
+    text = re.sub(r'b\.?com', 'bcom', text)
+    text = re.sub(r'm\.?com', 'mcom', text)
+    text = re.sub(r'b\.?ba', 'bba', text)
+    text = re.sub(r'm\.?ba', 'mba', text)
+    text = re.sub(r'b\.?ca', 'bca', text)
+    text = re.sub(r'm\.?ca', 'mca', text)
+    text = re.sub(r'b\.?ed', 'bed', text)
+    text = re.sub(r'wi-?fi', 'wifi', text)
+    text = re.sub(r'[^\w\s]', ' ', text)
+    return ' '.join(text.split())
+
+
+def stem_word(word: str) -> str:
+    """Basic English stemming for common suffixes to handle plurals/forms."""
+    if word.endswith('ies') and len(word) > 4:
+        return word[:-3] + 'y'
+    if word.endswith('es') and len(word) > 3:
+        return word[:-2]
+    if word.endswith('s') and not word.endswith('ss') and len(word) > 2:
+        return word[:-1]
+    if word.endswith('ing') and len(word) > 4:
+        return word[:-3]
+    return word
+
+
+def extract_content_words(text: str) -> Set[str]:
+    """Extract stemmed content words excluding stop words."""
+    words = normalize_text(text).split()
+    return {stem_word(w) for w in words if w not in STOP_WORDS}
+
+
 def calculate_similarity(query: str, text: str) -> float:
-    """Calculate similarity between query and text using Jaccard word similarity."""
-    query_words = set(query.lower().split())
-    text_words = set(text.lower().split())
+    """Calculate semantic similarity between query and target text."""
+    query_norm = normalize_text(query)
+    text_norm = normalize_text(text)
     
-    if not query_words or not text_words:
+    if not query_norm or not text_norm:
         return 0.0
-    
-    intersection = len(query_words & text_words)
-    union = len(query_words | text_words)
-    
-    return intersection / union if union > 0 else 0.0
+
+    if query_norm == text_norm:
+        return 1.0
+
+    if query_norm in text_norm or text_norm in query_norm:
+        return 0.90
+
+    q_content = extract_content_words(query)
+    t_content = extract_content_words(text)
+
+    if not q_content or not t_content:
+        return 0.0
+
+    inter = q_content & t_content
+    union = q_content | t_content
+
+    if not inter:
+        return 0.0
+
+    jaccard = len(inter) / len(union)
+    precision = len(inter) / len(q_content)
+    score = (jaccard * 0.4) + (precision * 0.6)
+
+    specific_inter = {w for w in inter if w not in GENERIC_WORDS}
+    if specific_inter:
+        score += 0.15 * min(len(specific_inter), 2)
+
+    return min(score, 1.0)
+
+
+def score_qa_pair(query_norm: str, query_content: Set[str], qa: Dict[str, Any]) -> float:
+    """Score how well a QA pair answers the user query."""
+    best_score = 0.0
+    q_text = normalize_text(qa['question'])
+    q_content = extract_content_words(qa['question'])
+
+    # 1. Direct question match
+    if query_norm == q_text:
+        return 1.0
+
+    if query_norm in q_text or q_text in query_norm:
+        best_score = max(best_score, 0.90)
+
+    # 2. Content word overlap with question
+    if query_content and q_content:
+        inter = query_content & q_content
+        union = query_content | q_content
+        if inter:
+            jaccard = len(inter) / len(union)
+            precision = len(inter) / len(query_content)
+            score = (jaccard * 0.4) + (precision * 0.6)
+            specific_inter = {w for w in inter if w not in GENERIC_WORDS}
+            if specific_inter:
+                score += 0.15 * min(len(specific_inter), 2)
+            best_score = max(best_score, score)
+
+    # 3. Match against keywords
+    padded_query = f" {query_norm} "
+    for kw in qa.get('keywords', []):
+        kw_norm = normalize_text(kw)
+        if not kw_norm or kw_norm in STOP_WORDS:
+            continue
+
+        padded_kw = f" {kw_norm} "
+        is_generic = kw_norm in GENERIC_WORDS
+
+        # Whole-phrase or whole-word match
+        if padded_kw in padded_query or query_norm == kw_norm:
+            kw_words = kw_norm.split()
+            if len(kw_words) >= 2:
+                best_score = max(best_score, 0.96)
+            elif not is_generic:
+                best_score = max(best_score, 0.88)
+            else:
+                best_score = max(best_score, 0.45)
+        elif len(kw_norm.split()) >= 2 and kw_norm in query_norm:
+            best_score = max(best_score, 0.80)
+
+        # Keyword content words overlap (whole words only)
+        kw_content = extract_content_words(kw)
+        if query_content and kw_content:
+            inter = query_content & kw_content
+            if len(inter) == len(kw_content) and len(kw_content) >= 1:
+                specific_kw = {w for w in kw_content if w not in GENERIC_WORDS}
+                if specific_kw:
+                    match_val = 0.75 + (0.1 * min(len(specific_kw), 3))
+                    best_score = max(best_score, match_val)
+
+    return min(best_score, 1.0)
 
 
 def find_best_match(question: str) -> Tuple[Optional[Dict[str, Any]], float]:
     """Find the best matching Q&A pair from the knowledge base."""
-    question_lower = question.lower().strip()
+    query_norm = normalize_text(question)
+    query_content = extract_content_words(question)
+
     best_match = None
     best_score = 0.0
-    
-    # Search through all categories
+
     for category, category_data in knowledge_base.get("categories", {}).items():
         for qa_pair in category_data.get("qa_pairs", []):
-            # Check direct question match
-            question_score = calculate_similarity(
-                question_lower,
-                qa_pair["question"].lower()
-            )
-            
-            # Check keywords match
-            keywords = qa_pair.get("keywords", [])
-            keyword_scores = [
-                calculate_similarity(question_lower, keyword)
-                for keyword in keywords
-            ]
-            
-            max_keyword_score = max(keyword_scores) if keyword_scores else 0.0
-            
-            # Best score between question and keywords
-            current_score = max(question_score, max_keyword_score)
-            
-            if current_score > best_score:
-                best_score = current_score
+            score = score_qa_pair(query_norm, query_content, qa_pair)
+            if score > best_score:
+                best_score = score
                 best_match = qa_pair
-    
+
     return best_match, best_score
 
 
 def is_simple_greeting(question: str) -> bool:
     """Check if the question is a simple greeting."""
     question_lower = question.lower().strip()
-    simple_greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'howdy']
-    return any(greeting in question_lower for greeting in simple_greetings)
+    simple_greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'howdy', 'namaste']
+    return any(re.search(rf'\b{re.escape(g)}\b', question_lower) for g in simple_greetings)
 
 
 def get_greeting_response() -> str:
@@ -88,7 +204,7 @@ def get_greeting_response() -> str:
     greetings = [
         "Hi there! Welcome to SGSU Chatbot. How can I help you with information about SCOPE Global Skills University?",
         "Hello! I'm here to help with any questions about SGSU. What would you like to know?",
-        "Hey! Great to meet you. Ask me anything about SGSU and I'll be happy to help!",
+        "Hey! Great to meet you. Ask me anything about SGSU courses, admissions, placements, or facilities and I'll be happy to help!",
         "Good day! I'm your SGSU assistant. What would you like to know about the university?"
     ]
     return random.choice(greetings)
@@ -96,47 +212,58 @@ def get_greeting_response() -> str:
 
 def is_sgsu_related(question: str) -> bool:
     """Check if the question is SGSU-related."""
-    question_lower = question.lower().strip()
-    
     if is_simple_greeting(question):
         return True
     
-    sgsu_keywords = [
-        'sgsu', 'scope global skills university', 'admission', 'faculty', 'program', 
-        'course', 'placement', 'contact', 'campus', 'facility', 'infrastructure',
-        'engineering', 'management', 'future skills', 'bhopal', 'hoshangabad',
-        'accreditation', 'ugc', 'skill', 'training', 'recruiting', 'recruiter',
-        'aisect', 'grievance', 'anti ragging', 'sports', 'wifi', 'canteen',
-        'sgsuniversity', 'apply', 'enroll', 'degree', 'scholarship', 'internship',
-        'partnership', 'industry', 'graduate', 'student', 'academic', 'application'
-    ]
+    question_norm = normalize_text(question)
+    q_words = set(question_norm.split())
+
+    # If the user explicitly mentions SGSU or university
+    if any(term in question_norm for term in ['sgsu', 'scope', 'skills university', 'sgsuniversity']):
+        return True
+        
+    sgsu_keywords = {
+        'admission', 'admissions', 'faculty', 'faculties', 'program', 'programs',
+        'course', 'courses', 'placement', 'placements', 'contact', 'campus', 'facility',
+        'facilities', 'infrastructure', 'engineering', 'management', 'bhopal',
+        'hoshangabad', 'accreditation', 'ugc', 'skill', 'skills', 'training',
+        'recruiting', 'recruiter', 'recruiters', 'recruits', 'recruit', 'companies',
+        'aisect', 'grievance', 'anti ragging', 'ragging', 'sports', 'wifi', 'canteen',
+        'apply', 'enroll', 'degree', 'degrees', 'scholarship', 'scholarships', 'internship',
+        'internships', 'partnership', 'partners', 'industry', 'graduate', 'student',
+        'students', 'academic', 'academics', 'application', 'fee', 'fees', 'cost',
+        'hostel', 'library', 'lab', 'labs', 'btech', 'mtech', 'bca', 'mca', 'bba', 'mba',
+        'bsc', 'msc', 'bcom', 'mcom', 'ba', 'ma', 'bed', 'diploma', 'exam', 'exams',
+        'entrance', 'clubs', 'fest', 'fests', 'girls', 'safety', 'security', 'cpc',
+        'salary', 'package', 'jobs', 'job', 'requirement', 'requirements', 'eligibility',
+        'specialization', 'specializations', 'branch', 'branches', 'location', 'located',
+        'address', 'where', 'syllabus', 'curriculum', 'website'
+    }
     
-    return any(keyword in question_lower for keyword in sgsu_keywords)
+    if q_words & sgsu_keywords:
+        return True
+        
+    return any(kw in question_norm for kw in ['anti ragging', 'scope campus', 'skills university'])
 
 
 def format_as_keypoints(text: str) -> str:
-    """Format text as key points with bullet points and line breaks."""
+    """Format text cleanly for display."""
     lines = text.split('\n')
     formatted_lines = []
     
     for line in lines:
         line = line.strip()
         if not line:
+            formatted_lines.append("")
             continue
         
-        line = line.lstrip('•-*·').strip()
-        
-        if line and not line.startswith('•'):
-            formatted_lines.append(f"• {line}")
-            formatted_lines.append("")
-        elif line.startswith('•'):
+        # Keep clean bullet points or numbers intact
+        if line.startswith(('•', '-', '*', '1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.')):
             formatted_lines.append(line)
-            formatted_lines.append("")
-    
-    while formatted_lines and formatted_lines[-1] == "":
-        formatted_lines.pop()
-    
-    return '\n'.join(formatted_lines)
+        else:
+            formatted_lines.append(line)
+            
+    return '\n'.join(formatted_lines).strip()
 
 
 def build_kb_context() -> str:
@@ -170,54 +297,12 @@ def get_answer_from_openrouter(question: str) -> Optional[str]:
         kb_context = build_kb_context()
         
         system_prompt = f"""You are an intelligent AI assistant for SCOPE Global Skills University (SGSU). 
-You are conversational, helpful, and excellent at understanding user intent even with informal language, typos, or casual phrasing.
+You are conversational, helpful, and answer accurately using this knowledge base:
 
 KNOWLEDGE BASE:
 {kb_context}
 
-BEHAVIORAL GUIDELINES:
-
-1. UNDERSTAND CONTEXT & INTENT:
-   - Understand synonyms (e.g., "course" = "program", "fee" = "cost", "teachers" = "faculty")
-   - Understand casual variations (e.g., "how do I get in" = "admission", "where r u from" = "location")
-   - Understand abbreviations (e.g., "UG" = "undergraduate", "PG" = "postgraduate")
-   - Handle typos and spelling mistakes gracefully
-   - Infer meaning from incomplete sentences
-
-2. SGSU-RELATED QUESTIONS - Answer helpfully:
-   - Use the knowledge base to provide accurate information
-   - Format as key points with bullet points (•) - each on separate line
-   - Be conversational and friendly, not robotic
-   - If info is incomplete, suggest how to get more details
-   - Make connections to related info the user might find helpful
-
-3. GREETINGS & CASUAL CHAT:
-   - Respond naturally to "hi", "hello", "hey", "how are you", etc.
-   - Keep greetings warm and brief (1-2 sentences)
-   - Then smoothly transition to offering SGSU help
-   - Example: "Hey! I'm doing great, thanks for asking! How can I help you with info about SGSU?"
-
-4. NON-SGSU QUESTIONS - FIRMLY REDIRECT:
-   - For unrelated questions like "what is a dog", "tell me a joke", "how to cook", etc.
-   - Use one of these fallback responses:
-     * "I'm not sure about that specific question. For detailed information, please contact SGSU at info@sgsuniversity.ac.in or visit https://sgsuniversity.ac.in/"
-     * "That's a great question! I don't have that specific information in my knowledge base. Please reach out to the admissions team at +91-7552432903/904."
-     * "I don't have that information yet. Please visit the SGSU website or contact the university directly for the most accurate and up-to-date information."
-     * "I'm specifically designed to help with SGSU-related questions. Feel free to ask me anything about the university!"
-
-5. TONE & PERSONALITY:
-   - Be conversational and approachable
-   - Use "I" and "we" to sound natural
-   - Show enthusiasm about SGSU
-   - Be concise but informative
-   - Avoid being robotic or overly formal
-
-6. KEY POINT FORMAT (for SGSU answers):
-   • Main information here
-   • Supporting detail or next step
-   • Additional relevant information
-
-Remember: You understand natural language, slang, abbreviations, and user intent. Always try to be helpful!"""
+Format your answers with clear bullet points and helpful guidance."""
         
         payload = {
             "model": "openai/gpt-3.5-turbo",
@@ -225,16 +310,15 @@ Remember: You understand natural language, slang, abbreviations, and user intent
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": question}
             ],
-            "temperature": 0.75,
-            "max_tokens": 600,
-            "top_p": 0.9
+            "temperature": 0.7,
+            "max_tokens": 500
         }
         
         response = requests.post(
             OPENROUTER_API_URL,
             headers=headers,
             json=payload,
-            timeout=10
+            timeout=8
         )
         
         if response.status_code == 200:
@@ -246,37 +330,37 @@ Remember: You understand natural language, slang, abbreviations, and user intent
         return None
         
     except Exception as e:
-        print(f"Error calling OpenRouter API: {e}")
+        print(f"OpenRouter API error: {e}")
         return None
 
 
 def get_answer(question: str) -> Tuple[str, float]:
-    """Get an answer for the user's question using OpenRouter API with KB fallback."""
+    """Get an answer for the user's question with KB matching and OpenRouter fallback."""
     if is_simple_greeting(question):
         return get_greeting_response(), 1.0
     
     if not is_sgsu_related(question):
         fallback_responses = knowledge_base.get("fallback_responses", [
-            "I'm not sure about that specific question. For detailed information, please contact SGSU at info@sgsuniversity.ac.in or visit https://sgsuniversity.ac.in/"
+            "I'm specifically designed to help with SCOPE Global Skills University (SGSU) queries. For questions about admissions, courses, fees, placements, or campus facilities, feel free to ask!"
         ])
         return random.choice(fallback_responses), 0.0
     
-    # Try OpenRouter API first
+    # Try OpenRouter API if enabled and keys exist
     if USE_OPENROUTER and OPENROUTER_API_KEYS:
         try:
             answer = get_answer_from_openrouter(question)
             if answer:
                 return answer, 0.95
-        except Exception as e:
-            print(f"OpenRouter API error: {e}")
+        except Exception:
+            pass
     
-    # Fall back to local knowledge base
+    # Accurate Knowledge Base match
     match, confidence = find_best_match(question)
     
-    if match and confidence > 0.2:
-        return match["answer"], confidence
+    if match and confidence >= 0.35:
+        return match["answer"], round(confidence, 2)
     else:
         fallback_responses = knowledge_base.get("fallback_responses", [
-            "I'm not sure about that. Could you ask something else?"
+            "I'm not completely certain about that specific query. Please contact the SGSU Admissions Desk at +91-7552432903/904 or visit https://sgsuniversity.ac.in/ for verified details."
         ])
         return random.choice(fallback_responses), 0.0

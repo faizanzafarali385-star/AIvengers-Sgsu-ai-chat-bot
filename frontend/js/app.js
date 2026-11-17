@@ -185,6 +185,24 @@ async function sendMessage() {
     messagesArea.scrollTop = messagesArea.scrollHeight;
 }
 
+function formatBotMessage(text) {
+    if (!text) return '';
+    
+    // Escape HTML special characters
+    let safe = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // Convert **bold** to <strong>
+    safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // Convert URLs into clickable anchor tags
+    safe = safe.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+    return safe;
+}
+
 function addMessage(text, type = 'bot', confidence = null) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
@@ -219,7 +237,12 @@ function addMessage(text, type = 'bot', confidence = null) {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    contentDiv.textContent = text;
+
+    if (type === 'bot') {
+        contentDiv.innerHTML = formatBotMessage(text);
+    } else {
+        contentDiv.textContent = text;
+    }
 
     if (type === 'bot' && confidence !== null && confidence > 0) {
         const confidenceDiv = document.createElement('div');
