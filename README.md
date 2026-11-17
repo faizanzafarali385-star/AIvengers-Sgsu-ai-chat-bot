@@ -1,32 +1,32 @@
 # 🎓 SGSU AI Chatbot System
 
-A complete chatbot solution for **SCOPE Global Skills University (SGSU)** built with a modular **FastAPI** backend, **JSON knowledge base** with **OpenRouter LLM fallback**, and a modern, responsive **Frontend UI** with dark mode support.
+A complete, production-ready AI Chatbot solution for **SCOPE Global Skills University (SGSU)**. Built with a modular **FastAPI** backend, high-precision **NLP Knowledge Base matcher** with **OpenRouter LLM fallback**, and a modern, responsive **Frontend UI** with live dark mode and formatted markdown responses.
 
 ---
 
 ## 📁 Project Structure
 
-The project has been organized into clean, modular directories:
+The project is organized into clean, modular files and directories:
 
-```
+```text
 SGSU/
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py           # Package marker
-│   │   ├── api.py                # FastAPI app, route handlers, static file mounting
-│   │   ├── chatbot.py            # Matching algorithms, prompt context & OpenRouter integration
-│   │   ├── config.py             # App paths, server ports, and API key settings
+│   │   ├── __init__.py           # Python package marker
+│   │   ├── api.py                # FastAPI routes, health check & static UI mounting
+│   │   ├── chatbot.py            # NLP matcher, intent detection & OpenRouter integration
+│   │   ├── config.py             # Server host/ports, directory paths, and API keys
 │   │   └── models.py             # Pydantic schemas (QuestionRequest, AnswerResponse)
 │   ├── data/
-│   │   └── knowledge_base.json   # 29 SGSU Q&A pairs categorized with smart keywords
+│   │   └── knowledge_base.json   # 70+ SGSU Q&A pairs categorized with smart keywords
 │   └── __init__.py
 ├── frontend/
-│   ├── index.html                # Semantic chat interface
+│   ├── index.html                # Semantic, accessible chat web interface
 │   ├── css/
-│   │   └── style.css             # UI styling, responsive design & dark mode
+│   │   └── style.css             # Responsive styling, animations & dark mode theme
 │   └── js/
-│       └── app.js                # Chat controller, auto API detection & retry logic
-├── docs/                         # Comprehensive project documentation & deployment guides
+│       └── app.js                # Chat controller, markdown parser & auto-reconnect
+├── docs/                         # Guides, technical overview & deployment docs
 │   ├── 00_MASTER_INDEX.md
 │   ├── COMPLETE_GUIDE.md
 │   ├── DEPLOYMENT_READY.md
@@ -41,37 +41,39 @@ SGSU/
 │   ├── START_HERE.md
 │   └── SYSTEM_OVERVIEW.md
 ├── .env.example                  # Environment configuration template
-├── .gitignore                    # Python, VSCode, OS & build ignore rules
+├── .gitignore                    # Git ignore rules (Python, npm, OS, IDE)
 ├── Dockerfile                    # Containerization build recipe
 ├── docker-compose.yml            # Multi-service container orchestration
+├── index.html                    # Root redirect to frontend/index.html
 ├── main.py                       # Single-command application entrypoint
 ├── requirements.txt              # Python package dependencies
-├── serve_frontend.py             # Optional standalone frontend server
-└── README.md                     # Project overview and instructions
+├── serve_frontend.py             # Optional standalone frontend development server
+└── README.md                     # Project overview and documentation
 ```
 
 ---
 
 ## ✨ Features
 
-- **All-in-One Serving**: Starting `main.py` serves both the backend API and frontend chat interface seamlessly on `http://localhost:8000`.
-- **Hybrid AI Engine**:
-  - Matches user queries against verified SGSU knowledge base data using Jaccard keyword similarity.
-  - Automatically queries OpenRouter (GPT) with full SGSU context for natural conversational responses.
-- **Modern UI**:
-  - Light / Dark mode toggle with preference persistence.
-  - Interactive quick-query suggestion buttons.
-  - Typing animation indicator.
-  - Confidence scoring indicator.
-  - Fully mobile-responsive layout.
-- **Container Ready**: Ready for Docker and `docker-compose` deployments.
+- **All-in-One Server**: Starting `main.py` simultaneously serves both the FastAPI REST backend and the frontend chat interface at `http://localhost:8000`.
+- **High-Precision NLP Engine**:
+  - **Stop-word & Stemming Aware**: Filters common conversational filler words (`what`, `is`, `are`, `tell`, `me`, `about`) so queries match the core intent.
+  - **Whole-Word & Phrase Matching**: Prevents substring false matches (e.g. short keywords like `'it'` no longer falsely match words like `'recruits'`).
+  - **Calibrated Confidence**: Direct phrase and keyword matches score `0.85`–`1.00`, with smooth fallback to friendly guidance when queries are out of scope.
+  - **OpenRouter LLM Integration**: Automatic GPT fallback with full SGSU context when external API keys are configured.
+- **Modern Responsive UI**:
+  - **Formatted Answers**: Markdown bold headers (`**text**`), bulleted lists (`•`), and clickable links (`https://...`) rendered cleanly with proper line spacing.
+  - **8 One-Click Quick Questions**: Instant answers for About SGSU, Admissions, Programs, Placements, Fee Structure, Facilities, All Courses, and B.Tech Specializations.
+  - **Dark / Light Mode**: Toggle switch with persistent user preference in `localStorage`.
+  - **Typing Animation & Confidence Indicators**: Real-time feedback for a natural chat experience.
+- **Production & Cloud Ready**: Fully configured for Docker, Docker Compose, Render, or independent static hosting.
 
 ---
 
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
-- Python 3.8+ (Tested on Python 3.11 & 3.12)
+- Python 3.8+ (tested on Python 3.11 & 3.12)
 - Virtual environment (recommended)
 
 ### 2. Install Dependencies
@@ -81,14 +83,15 @@ pip install -r requirements.txt
 
 ### 3. Run the Chatbot
 
-#### Option A: Unified Server (Recommended - 1 Command)
+#### Option A: Unified Server (Recommended — 1 Command)
 ```bash
 python main.py
 ```
 - Open **[http://localhost:8000](http://localhost:8000)** in your browser.
-- Both the frontend UI and the REST API run simultaneously from this single server!
+- Both the web chat interface and the REST API run simultaneously from this single server.
 
-#### Option B: Separate Frontend & Backend Servers
+#### Option B: Separate Frontend & Backend Servers (Optional)
+If you want to run or edit the frontend independently:
 - **Terminal 1 (Backend)**:
   ```bash
   python main.py
@@ -99,7 +102,10 @@ python main.py
   ```bash
   python serve_frontend.py
   ```
-  UI runs on `http://localhost:8080` (auto-connects to backend on port 8000).
+  Frontend runs on `http://localhost:8080` (auto-detects and connects to backend on port 8000).
+
+#### Option C: VS Code Live Server
+Opening the project with Live Server (port 5500/5501) automatically routes requests to the backend at `http://localhost:8000`.
 
 ---
 
@@ -107,32 +113,69 @@ python main.py
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/` | Serves the web frontend UI |
-| `GET` | `/health` | Health check endpoint returning API status |
-| `POST` | `/ask` | Ask a question (`{"question": "What is SGSU?"}`) |
+| `GET` | `/` | Serves the web frontend UI directly |
+| `GET` | `/health` | Health check endpoint returning `{"status": "healthy", "service": "chatbot-api"}` |
+| `POST` | `/ask` | Ask a question (`{"question": "What are the admission requirements?"}`) |
 | `GET` | `/docs` | Interactive Swagger API documentation |
+| `GET` | `/redoc` | ReDoc API specification |
+
+### Example API Request (cURL)
+```bash
+curl -X POST "http://localhost:8000/ask" \
+  -H "Content-Type: application/json" \
+  -d "{\"question\": \"What are the placement opportunities?\"}"
+```
+
+### Example API Response
+```json
+{
+  "question": "What are the placement opportunities?",
+  "answer": "SGSU has an excellent placement record with strong partnerships with 500+ companies. We ensure practical exposure and job readiness for all students. Most graduates secure placements through campus recruitment or internship conversions.",
+  "confidence": 1.0
+}
+```
+
+---
+
+## ⚙️ Environment Variables (Optional)
+
+Create a `.env` file in the root directory (based on `.env.example`) to customize configuration:
+
+```env
+# Server Host and Port
+HOST=0.0.0.0
+PORT=8000
+FRONTEND_PORT=8080
+
+# OpenRouter LLM Fallback (Optional)
+USE_OPENROUTER=true
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+```
+
+*Note: If no OpenRouter key is provided, the chatbot seamlessly operates using its local high-speed NLP Knowledge Base.*
 
 ---
 
 ## 🐳 Docker Deployment
 
-To run with Docker:
+### Using Docker Directly:
 ```bash
 docker build -t sgsu-chatbot .
 docker run -p 8000:8000 sgsu-chatbot
 ```
 
-Or using Docker Compose:
+### Using Docker Compose:
 ```bash
 docker-compose up --build
 ```
 
 ---
 
-## 📚 Documentation
+## 📚 Documentation & Guides
 
-Detailed guides and references have been neatly filed inside the [`docs/`](file:///c:/Users/faiza/OneDrive/Desktop/SGSU%20Projects/SGSU/docs) directory:
-- [docs/QUICK_START.md](file:///c:/Users/faiza/OneDrive/Desktop/SGSU%20Projects/SGSU/docs/QUICK_START.md) — Fast local deployment instructions.
-- [docs/SYSTEM_OVERVIEW.md](file:///c:/Users/faiza/OneDrive/Desktop/SGSU%20Projects/SGSU/docs/SYSTEM_OVERVIEW.md) — Technical architecture overview.
-- [docs/DEPLOY_RENDER.md](file:///c:/Users/faiza/OneDrive/Desktop/SGSU%20Projects/SGSU/docs/DEPLOY_RENDER.md) — Cloud deployment guide for Render.
-- [docs/00_MASTER_INDEX.md](file:///c:/Users/faiza/OneDrive/Desktop/SGSU%20Projects/SGSU/docs/00_MASTER_INDEX.md) — Delivery and verification index.
+Comprehensive guides and architectural documentation are available in the [`docs/`](docs/) directory:
+- [docs/QUICK_START.md](docs/QUICK_START.md) — Rapid setup guide.
+- [docs/SYSTEM_OVERVIEW.md](docs/SYSTEM_OVERVIEW.md) — Technical architecture and data flow.
+- [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) — Cloud deployment on Render.
+- [docs/SGSU_TRAINING_UPDATE.md](docs/SGSU_TRAINING_UPDATE.md) — Knowledge base categorization and training details.
+- [docs/00_MASTER_INDEX.md](docs/00_MASTER_INDEX.md) — Project verification master index.
